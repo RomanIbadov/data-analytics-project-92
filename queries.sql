@@ -50,7 +50,7 @@ where income < (select avg_income from tab2);
 with dow as (
 select 
 	concat(first_name, ' ', last_name) seller,
-	to_char(s.sale_date, 'Day') day_of_week,
+	to_char(s.sale_date, 'day') day_of_week,
 	floor(sum(p.price * s.quantity)) income,
 	extract(isodow from s.sale_date) day_week 
 from employees e 
