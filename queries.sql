@@ -64,3 +64,64 @@ select
 	income
 from dow
 order by day_week, seller;
+
+/* ШАГ № 6
+Первый отчет - количество покупателей в разных возрастных группах: 16-25, 26-40 и 40+.
+ */
+
+select (
+case
+	when age between 16 and 25 then '16-25'
+	when age between 26 and 40 then '26-40'
+	when age > 40 then '40+'
+end
+	) age_category,
+	count(customer_id) age_count
+from customers
+group by age_category
+order by age_category asc;
+
+/* 
+ Второй отчет по количеству уникальных покупателей и выручке, которую они принесли.
+ */
+
+select 
+	to_char(s.sale_date, 'yyyy-mm') selling_month,
+	count(s.customer_id) total_customers,
+	floor(sum(p.price * s.quantity)) income
+from sales s
+join products p on p.product_id = s.product_id
+group by selling_month
+order by selling_month;
+
+/* 
+ Третий отчет о покупателях, первая покупка которых была в ходе проведения акций
+ */
+
+with tab1 as (
+select
+	concat(c.first_name, ' ', c.last_name) customer,
+	s.sale_date,
+	concat(e.first_name, ' ', e.last_name) seller
+from sales s 
+join customers c on c.customer_id = s.customer_id 
+join employees e on e.employee_id = s.sales_person_id
+join products p on p.product_id = s.product_id 
+where p.price = 0
+group by customer, sale_date, seller, c.customer_id 
+order by c.customer_id),
+
+tab2 as (
+select 
+	customer,
+	sale_date,
+	seller,
+	row_number () over(partition by customer order by sale_date) cid
+from tab1
+)
+select 
+	customer,
+	sale_date,
+	seller
+from tab2
+where cid = 1;
