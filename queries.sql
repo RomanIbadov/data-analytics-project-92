@@ -10,14 +10,14 @@ from customers;
  */
 
 select
-    concat(e.first_name, ' ', e.last_name) as seller,
-    count(s.quantity) as operations,
-    floor(sum(p.price * s.quantity)) as income
-from employees as e
-inner join sales as s
-    on e.employee_id = s.sales_person_id
-inner join products as p
-    on s.product_id = p.product_id
+    concat(employees.first_name, ' ', employees.last_name) as seller,
+    count(sales.quantity) as operations,
+    floor(sum(products.price * sales.quantity)) as income
+from employees
+inner join sales
+    on employees.employee_id = sales.sales_person_id
+inner join products
+    on sales.product_id = products.product_id
 group by seller
 order by income desc
 limit 10;
@@ -28,11 +28,11 @@ limit 10;
 
 with tab1 as (
     select
-        concat(e.first_name, ' ', e.last_name) as seller,
-        floor(avg(p.price * s.quantity)) as income
-    from employees as e
-    inner join sales as s on e.employee_id = s.sales_person_id
-    inner join products as p on s.product_id = p.product_id
+        concat(employees.first_name, ' ', employees.last_name) as seller,
+        floor(avg(products.price * sales.quantity)) as income
+    from employees
+    inner join sales on employees.employee_id = sales.sales_person_id
+    inner join products on sales.product_id = products.product_id
     group by seller
     order by income
 ),
@@ -55,13 +55,13 @@ where income < (select avg_income from tab2);
 
 with dow as (
     select
-        concat(e.first_name, ' ', e.last_name) as seller,
-        to_char(s.sale_date, 'Day') as day_of_week,
-        floor(sum(p.price * s.quantity)) as income,
-        extract(isodow from s.sale_date) as day_week
-    from employees as e
-    inner join sales as s on e.employee_id = s.sales_person_id
-    inner join products as p on s.product_id = p.product_id
+        concat(employees.first_name, ' ', employees.last_name) as seller,
+        to_char(sales.sale_date, 'day') as day_of_week,
+        floor(sum(products.price * sales.quantity)) as income,
+        extract(isodow from sales.sale_date) as day_week
+    from employees
+    inner join sales on employees.employee_id = sales.sales_person_id
+    inner join products on sales.product_id = products.product_id
     group by seller, day_of_week, day_week
 )
 
@@ -94,11 +94,11 @@ order by age_category asc;
  */
 
 select
-    to_char(s.sale_date, 'yyyy-mm') as selling_month,
-    count(distinct s.customer_id) as total_customers,
-    floor(sum(p.price * s.quantity)) as income
-from sales as s
-inner join products as p on s.product_id = p.product_id
+    to_char(sales.sale_date, 'YYYY-MM') as selling_month,
+    count(distinct sales.customer_id) as total_customers,
+    floor(sum(products.price * sales.quantity)) as income
+from sales
+inner join products on sales.product_id = products.product_id
 group by selling_month
 order by selling_month;
 
@@ -108,16 +108,16 @@ order by selling_month;
 
 with tab1 as (
     select
-        s.sale_date,
-        concat(c.first_name, ' ', c.last_name) as customer,
-        concat(e.first_name, ' ', e.last_name) as seller
-    from sales as s
-    inner join customers as c on s.customer_id = c.customer_id
-    inner join employees as e on s.sales_person_id = e.employee_id
-    inner join products as p on s.product_id = p.product_id
-    where p.price = 0
-    group by customer, s.sale_date, seller, c.customer_id
-    order by c.customer_id
+        sales.sale_date,
+        concat(customers.first_name, ' ', customers.last_name) as customer,
+        concat(employees.first_name, ' ', employees.last_name) as seller
+    from sales
+    inner join customers on sales.customer_id = customers.customer_id
+    inner join employees on sales.sales_person_id = employees.employee_id
+    inner join products on sales.product_id = products.product_id
+    where products.price = 0
+    group by customer, sales.sale_date, seller, customers.customer_id
+    order by customers.customer_id
 ),
 
 tab2 as (
