@@ -108,7 +108,11 @@ with tab1 as (
     where public.products.price = 0
     group by
         public.sales.customer_id,
+        public.customers.first_name,
+        public.customers.last_name,
         public.sales.sale_date,
+        public.employees.first_name,
+        public.employees.last_name,
         public.products.price
     order by public.sales.customer_id, public.sales.sale_date
 ),
@@ -118,7 +122,8 @@ tab2 as (
         customer,
         sale_date,
         seller,
-        row_number() over (partition by customer order by sale_date) as cid
+        row_number() over (partition by customer order by sale_date)
+        as cid
     from tab1
 )
 
