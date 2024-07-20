@@ -27,38 +27,12 @@ limit 10;
  */
 
 with tab1 as (
-	select 
-		concat(first_name, ' ', last_name) seller,
-		floor(avg(p.price * s.quantity)) income
-	from employees e 
-	join sales s on e.employee_id = s.sales_person_id
-	join products p on p.product_id = s.product_id 
-group by seller
-order by income
-), 
-tab2 as (
-	select 
-		avg(income) avg_income from tab1
-		)
-select 
-	seller, 
-	income 
-from tab1 
-where income < (select avg_income from tab2);
-
-/*
-Третий отчет содержит информацию о выручке по дням недели 
- */
-
-with tab1 as (
     select
-        concat(e.first_name, ' ', e.last_name) as seller,
+        concat(first_name, ' ', last_name) as seller,
         floor(avg(p.price * s.quantity)) as income
     from employees as e
-    inner join sales as s
-        on e.employee_id = s.sales_person_id
-    inner join products as p
-        on s.product_id = p.product_id
+    inner join sales as s on e.employee_id = s.sales_person_id
+    inner join products as p on s.product_id = p.product_id
     group by seller
     order by income
 ),
@@ -73,6 +47,29 @@ select
     income
 from tab1
 where income < (select avg_income from tab2);
+
+/*
+Третий отчет содержит информацию о выручке по дням недели 
+ */
+
+with dow as (
+    select
+        concat(first_name, ' ', last_name) as seller,
+        to_char(s.sale_date, 'Day') as day_of_week,
+        floor(sum(p.price * s.quantity)) as income,
+        extract(isodow from s.sale_date) as day_week
+    from employees as e
+    inner join sales as s on e.employee_id = s.sales_person_id
+    inner join products as p on s.product_id = p.product_id
+    group by seller, day_of_week, day_week
+)
+
+select
+    seller,
+    day_of_week,
+    income
+from dow
+order by day_week, seller;
 
 /* ШАГ № 6
 Первый отчет - количество покупателей в разных возрастных группах: 16-25, 26-40 и 40+.
@@ -118,7 +115,7 @@ with tab1 as (
     inner join employees as e on s.sales_person_id = e.employee_id
     inner join products as p on s.product_id = p.product_id
     where p.price = 0
-    group by customer, sale_date, seller, c.customer_id
+    group by customer, s.sale_date, seller, c.customer_id
     order by c.customer_id
 ),
 
