@@ -28,7 +28,7 @@ limit 10;
 
 with tab1 as (
     select
-        concat(first_name, ' ', last_name) as seller,
+        concat(e.first_name, ' ', e.last_name) as seller,
         floor(avg(p.price * s.quantity)) as income
     from employees as e
     inner join sales as s on e.employee_id = s.sales_person_id
@@ -48,13 +48,14 @@ select
 from tab1
 where income < (select avg_income from tab2);
 
+
 /*
 Третий отчет содержит информацию о выручке по дням недели 
  */
 
 with dow as (
     select
-        concat(first_name, ' ', last_name) as seller,
+        concat(e.first_name, ' ', e.last_name) as seller,
         to_char(s.sale_date, 'Day') as day_of_week,
         floor(sum(p.price * s.quantity)) as income,
         extract(isodow from s.sale_date) as day_week
