@@ -21,33 +21,25 @@ order by income desc
 limit 10;
 
 "Второй отчет о продавцах,средняя выручка меньше средней выручкипо всем продавцам"
-with tab1 as (
-    select
-        concat(
-            public.employees.first_name, ' ', public.employees.last_name
-        ) as seller,
-        floor(avg(public.products.price * public.sales.quantity)) as income
-    from public.employees
-    inner join
-        public.sales
-        on public.employees.employee_id = public.sales.sales_person_id
-    inner join
-        public.products
-        on public.sales.product_id = public.products.product_id
-    group by seller
-    order by income
-),
-
-tab2 as (
-    select avg(income) as avg_income
-    from tab1
-)
-
 select
-    seller,
-    income
-from tab1
-where income < (select avg_income from tab2);
+    concat(public.employees.first_name, ' ', public.employees.last_name)
+    as seller,
+    floor(avg(public.products.price * public.sales.quantity))
+    as average_income
+from public.employees
+inner join public.sales
+    on public.employees.employee_id = public.sales.sales_person_id
+inner join public.products
+    on public.sales.product_id = public.products.product_id
+group by seller
+having
+    frloor(avg(public.products.price * public.sales.quantity)) < (
+        select floor(avg(public.products.price * public.sales.quantity))
+        from public.sales
+        inner join public.products
+            on public.sales.product_id = public.products.product_id
+    )
+order by average_income;
 "Третий отчет содержит информацию о выручке по дням недели"
 with dow as (
     select
@@ -115,10 +107,9 @@ with tab1 as (
         on public.sales.product_id = public.products.product_id
     where public.products.price = 0
     group by
-        customer,
-        sales.sale_date,
-        seller,
-        customers.customer_id
+        public.sales.customer_id,
+        public.sales.sale_date,
+        public.products.price
     order by public.sales.customer_id, public.sales.sale_date
 ),
 
@@ -135,5 +126,5 @@ select
     customer,
     sale_date,
     seller
-from rn_tab
+from tab2
 where cid = 1;
