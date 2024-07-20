@@ -1,20 +1,20 @@
 ШАГ 4
-"Первый отчет считает общее количество покупателей из таблицы customers"
+считает общее количество покупателей из таблицы customers
 select count(customer_id) as "customers_count"
 from public.customers;
 
 ШАГ 5
-"Первый отчет о десятке лучших продавцов"
+Первый отчет о десятке лучших продавцов.
 select
     concat(public.employees.first_name, ' ', public.employees.last_name)
     as seller,
-    count(public.sales.quantity)
+    count(public.sales.sales_person_id)
     as operations,
     floor(sum(public.products.price * public.sales.quantity)) as income
-from employees
-inner join sales
+from public.employees
+inner join public.sales
     on public.employees.employee_id = public.sales.sales_person_id
-inner join products
+inner join public.products
     on public.sales.product_id = public.products.product_id
 group by seller
 order by income desc
